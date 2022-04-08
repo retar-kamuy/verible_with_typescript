@@ -14,7 +14,7 @@ export class SubProcess {
 	/**
 	 * Runs a command by asynchronous.
 	 */
-	runAsync(args: string[]): {stdout: string} {
+	runAsync = (args: string[]): {stdout: string} => {
 		let stdout_ = '';
 		exec(args.join(' '), (err, stdout, stderr) => {
 			if(err) {
@@ -32,7 +32,7 @@ export class SubProcess {
 	 * Runs a command, waits for it to complete, then returns a
 	 * CompletedProcess instance.
 	 */
-	run(args: string[]): {stdout: string} {
+	run = (args: string[]): {stdout: string} => {
 		let stdout_ = execSync(args.join(' '));
 		//console.log(`stdout: ${stdout_.toString()}`);
 		return {stdout: stdout_.toString()};

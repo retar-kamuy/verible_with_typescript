@@ -24,10 +24,23 @@ type SyntaxData = {
  * @param children (Optional[Node]): Child nodes.
  */
 export class BranchNode {
-	iter_find_all(obj: any, filter_: string[]): any {
-		const dig = new Dig();
+	/**
+	 * Iterate all nodes matching specified filter.
+	 *
+	 * @param iter_ Tree iterator. Decides in what order nodes are visited.
+	 * @param filter_ Describes what to search for. Might be:
+	 *     * Callable taking Node as an argument and returning True for accepted
+	 *       nodes.
+	 *     * Dict mapping Node attribute names to searched value or list of
+	 *       searched values.
+	 * @param max_count Stop searching after finding that many matching nodes.
+	 *
+	 * @return Nodes matching specified filter.
+	 */
+	iter_find_all(iter_: Dict<SyntaxData>, filter_: string[], max_count?: number): any {
+		const dig = new Dig(max_count);
 		for (const target of filter_) {
-			dig.run(obj, target);
+			dig.run(iter_, target);
 		}
 		return dig.get_result();
 	}
@@ -35,19 +48,35 @@ export class BranchNode {
 	/**
 	 * Find node matching specified filter.
 	 *
-	 * Args:
-	 *   filter_: Describes what to search for. Might be:
+	 * @param iter_ Tree iterator. Decides in what order nodes are visited.
+	 * @param filter_ Describes what to search for. Might be:
 	 *     * Callable taking Node as an argument and returning True for accepted
 	 *       node.
 	 *     * Dict mapping Node attribute names to searched value or list of
 	 *       searched values.
-	 *   iter_: Tree iterator. Decides in what order nodes are visited.
 	 *
-	 *Returns:
-	 *  First Node matching filter.
+	 * @return First Node matching filter.
 	 */
-	find(obj: any, filter_: string[]): any {
-		return this.iter_find_all(obj, filter_);
+	find(iter_: any, filter_: string[]): any {
+		const nodes = this.iter_find_all(iter_, filter_, 1);
+		return nodes[0];
+	}
+
+	/**
+	 * Find all nodes matching specified filter.
+	 *
+	 * @param iter_ Tree iterator. Decides in what order nodes are visited.
+	 * @param filter_ Describes what to search for. Might be:
+	 *    * Callable taking Node as an argument and returning True for accepted
+	 *      nodes.
+	 *    * Dict mapping Node attribute names to searched value or list of
+	 *      searched values.
+	 * @param max_count Stop searching after finding that many matching nodes.
+	 *
+	 * @return List of nodes matching specified filter.
+	 */
+	find_all(iter_: any, filter_: string[], max_count?: number): any {
+		return this.iter_find_all(iter_, filter_, max_count);
 	}
 }
 

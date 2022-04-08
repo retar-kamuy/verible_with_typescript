@@ -10,29 +10,36 @@
 */
 export default class Dig {
 	private objs: any;
+	private max_count: number;
 
-	constructor() {
+	constructor(max_count?: number) {
 		this.objs = [];
+		max_count !== undefined ? this.max_count = max_count : this.max_count = -1;
 	}
 
-	get_result = (): any => {
+	get_result(): any {
 		return this.objs;
 	}
 
-	run = (obj: any, target: string): any => {
-		//target in obj
-		//? obj[target]
+	run(obj: any, target: string): any {
+		if(this.max_count == 0) {
+			return;
+		}
+
 		if(Object.values(obj).indexOf(target) > -1) {
 			this.objs.push(obj);
+			this.max_count -= 1;
 		}
-		Object.values(obj).reduce((acc: any, val: any) => {
-			if (acc !== undefined) {
-				return acc;
-			}
-			if (typeof val === 'object') {
-				if(val !== null)
-					return this.run(val, target);
-			}
-		}, undefined);
+		else {
+			Object.values(obj).reduce((acc: any, val: any) => {
+				if (acc !== undefined) {
+					return acc;
+				}
+				if (typeof val === 'object') {
+					if(val !== null)
+						return this.run(val, target);
+				}
+			}, undefined);
+		}
 	}
 }

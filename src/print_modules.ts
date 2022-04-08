@@ -1,6 +1,6 @@
 import { BranchNode, VeribleVerilogSyntax } from './verible_verilog_syntax';
 
-const main = (): void => {
+function main(): void {
 	let parser_path = '\.\\verible-verilog-syntax.exe';
 	let files = ['\.\\APB_SPI_Top.v'];
 
@@ -13,7 +13,7 @@ const main = (): void => {
 	const header = branch_node.find(data, ['kModuleHeader']);
 	const port = branch_node.iter_find_all(header, ['kPortDeclaration', 'kPort']);
 	console.log(port);
-	const port_id = branch_node.find(port, ['SymbolIdentifier', 'EscapedIdentifier']);
+	const port_id = branch_node.find_all(port, ['SymbolIdentifier', 'EscapedIdentifier']);
 	console.log(port_id);
 };
 
