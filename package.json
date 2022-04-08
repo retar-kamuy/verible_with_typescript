@@ -1,0 +1,29 @@
+{
+  "name": "verible_verilog_syntax",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "child_process": "^1.0.2",
+    "typescript": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.23"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hoshi-takumi/verible_verilog_syntax.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hoshi-takumi/verible_verilog_syntax/issues"
+  },
+  "homepage": "https://github.com/hoshi-takumi/verible_verilog_syntax#readme"
+}
