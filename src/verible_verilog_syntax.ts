@@ -8,12 +8,63 @@ type Dict<T> = {
 	[key: string]: T
 }
 
-type SyntaxData = {
-	source_code?: string
-	tree?: {},
-	//tokens: Token[],
-	//rawtokens: Token[],
-	//errors: Error[]
+export interface SyntaxData {
+	source_code?: string;
+	tree?: RootNode;
+	//tokens: Token[];
+	//rawtokens: Token[];
+	//errors: Error[];
+}
+
+/**
+ * Base VeribleVerilogSyntax syntax tree node.
+ *
+ * Attributes:
+ *  parent (Optional[Node]): Parent node.
+ */
+export class Node {
+	public parent: Node | undefined;
+
+	constructor(parent?: Node) {
+		parent !== undefined ? this.parent = parent : this.parent = undefined;
+	}
+
+	/**
+	 * Parent SyntaxData.
+	 */
+	syntax_data(): any {
+		console.log('syntax_data');
+		console.log(this.parent);
+		if(this.parent !== undefined) {
+			return this.parent.syntax_data() !== undefined
+			? this.parent
+			: undefined;
+		}
+	}
+
+	/**
+	 * Byte offset of node's first character in source text.
+	 */
+	 start(): number | undefined {
+		return undefined;
+	}
+
+	/**
+	 * Byte offset of a character just past the node in source text.
+	 */
+	end(): number | undefined {
+		return undefined;
+	}
+
+	/**
+	 * Source code fragment spanning all tokens in a node.
+	 */
+	text(): string {
+		const start = this.start();
+		const end = this.end();
+		const sd = this.syntax_data();
+		return '';
+	}
 }
 
 /**
@@ -23,7 +74,22 @@ type SyntaxData = {
  * @param tag (str): Node tag.
  * @param children (Optional[Node]): Child nodes.
  */
-export class BranchNode {
+export class BranchNode extends Node {
+	private tag: string;
+	private children: Node[] | undefined;
+
+	constructor(tag: string, parent?: Node, children?: Node[]) {
+		super(parent);
+		this.tag = tag;
+		children !== undefined ? this.children = children : this.children = [];
+	}
+
+	//start(): number {
+		//const first_token = this.find(lambda n: isinstance(n, TokenNode),
+	    //                       iter_=PostOrderTreeIterator)
+	    //return first_token.start if first_token else None
+	//}
+
 	/**
 	 * Iterate all nodes matching specified filter.
 	 *
@@ -37,10 +103,10 @@ export class BranchNode {
 	 *
 	 * @return Nodes matching specified filter.
 	 */
-	iter_find_all(iter_: Dict<SyntaxData>, filter_: string[], max_count?: number): any {
+	iter_find_all(filter_: {[key: string]: string[]}, max_count?: number): BranchNode[] {
 		const dig = new Dig(max_count);
-		for (const target of filter_) {
-			dig.run(iter_, target);
+		for (const target of filter_.tag) {
+			dig.run(this.children, target);
 		}
 		return dig.get_result();
 	}
@@ -57,8 +123,8 @@ export class BranchNode {
 	 *
 	 * @return First Node matching filter.
 	 */
-	find(iter_: any, filter_: string[]): any {
-		const nodes = this.iter_find_all(iter_, filter_, 1);
+	find(filter_: {[key: string]: string[]}): BranchNode {
+		const nodes = this.iter_find_all(filter_, 1);
 		return nodes[0];
 	}
 
@@ -75,9 +141,76 @@ export class BranchNode {
 	 *
 	 * @return List of nodes matching specified filter.
 	 */
-	find_all(iter_: any, filter_: string[], max_count?: number): any {
-		return this.iter_find_all(iter_, filter_, max_count);
+	find_all(filter_: {[key: string]: string[]}, max_count?: number): BranchNode[] {
+		return this.iter_find_all(filter_, max_count);
 	}
+}
+
+/**
+ * Syntax tree root node.
+ */
+class RootNode extends BranchNode {
+	private _syntax_data: SyntaxData | undefined;
+
+	constructor(tag: string, syntax_data?: SyntaxData, children?: Node[]) {
+		super(tag, undefined, children);
+		this._syntax_data = syntax_data;
+	}
+
+	syntax_data(): SyntaxData | undefined {
+		return this._syntax_data;
+	}
+}
+
+/**
+ * Syntax tree leaf node.
+ *
+ * This specific class is used for null nodes.
+ */
+class LeafNode extends Node {
+	/**
+	 * Byte offset of token's first character in source text.
+	 */
+	start(): number | undefined {
+		return undefined;
+	}
+
+	/**
+	 * Byte offset of a character just past the token in source text.
+	 */
+	end(): number | undefined {
+		return undefined;
+	}
+}
+
+/**
+ * Tree node with token data
+ *
+ * Represents single token in a syntax tree.
+ *
+ * Attributes:
+ *   tag (str): Token tag.
+ */
+class TokenNode extends LeafNode {
+	private tag: string;
+	private _start: number;
+	private _end: number;
+
+	constructor(tag: string, _start: number, _end: number, parent?: Node) {
+		super(parent);
+		this.tag = tag;
+		this._start = _start;
+		this._end = _end;
+	}
+
+	start(): number {
+		return this._start;
+	}
+
+	end(): number {
+		return this._end;
+	}
+
 }
 
 /**
@@ -97,35 +230,75 @@ export class VeribleVerilogSyntax {
 		this.executable = executable;
 	}
 
-	/** Common implementation of parse_* methods */
+	_transform_tree(tree: any, data: SyntaxData, skip_null: boolean): RootNode {
+		const children = [];
+		const tag = tree.tag;
+		if (!('children' in tree)) {
+			return new RootNode(tag, data, []);
+		}
+
+		//console.log(tree);
+		for (const child of tree.children) {
+			!((skip_null && child === null) || child === undefined)
+			? children.push(this.transform(child, skip_null))
+			: children.push(new LeafNode());
+		}
+
+		//console.log(tree);
+		return new RootNode(tag, data, children);
+	}
+
+	transform(tree: any, skip_null: boolean): any {
+		if (tree === undefined) {
+			return undefined;
+		}
+		if ('children' in tree) {
+			const children = [];
+			for (const child of tree.children) {
+				!((skip_null && child === null) || child === undefined)
+				? children.push(this.transform(child, skip_null))
+				: children.push(new LeafNode());
+			}
+			let tag = tree.tag;
+			return new BranchNode(tag, undefined, children);
+		}
+		const tag = tree.tag;
+		const start = tree.start;
+		const end = tree.end;
+		return new TokenNode(tag, start, end)
+	}
+
+	/**
+	 * Common implementation of parse_* methods
+	 */
 	_parse(paths: string[], options?: Dict<any>, input_?: string): Dict<SyntaxData> {
-		let _options = {
-			'gen_tree': true,
-			'skip_null': false,
-			'gen_tokens': false,
-			'gen_rawtokens': false,
+		const _options = {
+			gen_tree: true,
+			skip_null: true,
+			gen_tokens: false,
+			gen_rawtokens: false,
 			options
 		};
 
 		var args = ['-export_json'];
-		if (_options['gen_tree']) {
+		if (_options.gen_tree) {
 			args.push('-printtree');
 		}
-		if (_options['gen_tokens']) {
+		if (_options.gen_tokens) {
 			args.push('-printtokens');
 		}
-		if (_options['gen_rawtokens']) {
+		if (_options.gen_rawtokens) {
 			args.push('-printrawtokens');
 		}
 
 		const subprocess = new SubProcess();
 		const proc = subprocess.run([this.executable, ...args, ...paths]);
 
-		const json_data = JSON.parse(proc.stdout);
+		const json_data: SyntaxData = JSON.parse(proc.stdout);
 		let data: Dict<SyntaxData> = {};
 
 		for (const [file_path, file_json] of Object.entries(json_data)) {
-			console.log(`{${file_path}, ${file_json}}`);
+			//console.log(`{${file_path}, ${file_json}}`);
 			let file_data: SyntaxData;
 
 			if (file_path === '-') {
@@ -136,36 +309,31 @@ export class VeribleVerilogSyntax {
 				file_data = {source_code: f.readFileSync(file_path)};
 			}
 
-			if(typeof file_json === 'object' && file_json !== null) {
-				const file_json_: SyntaxData = file_json;
-
-				if ('tree' in file_json_) {
-					file_data.tree = file_json_['tree'];
-					//file_data.tree = VeribleVerilogSyntax._transform_tree(
-					//	file_json["tree"], file_data, options["skip_null"]);
-				}
-
-				/**
-				 * TODO: Not implemented
-				 * if ('tokens' in file_json) {
-				 * 	file_data.tokens = file_json_['tokens'];
-				 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
-				 * 	//	file_json["tokens"], file_data);
-				 * }
-				 * 
-				 * if ('rawtokens' in file_json) {
-				 * 	file_data.rawtokens = file_json_['rawtokens'];
-				 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
-				 * 	//	file_json["rawtokens"], file_data);
-				 * }
-				 * 
-				 * if ('errors' in file_json) {
-				 * 	file_data.errors = file_json_['errors'];
-				 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
-				 * 	//	file_json["errors"]);
-				 * }
-				 */
+			if ('tree' in file_json) {
+				//file_data.tree = file_json_.tree;
+				file_data.tree = this._transform_tree(file_json.tree, file_data, _options.skip_null);
 			}
+
+			/**
+			 * TODO: Not implemented
+			 * if ('tokens' in file_json) {
+			 * 	file_data.tokens = file_json_['tokens'];
+			 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
+			 * 	//	file_json["tokens"], file_data);
+			 * }
+			 * 
+			 * if ('rawtokens' in file_json) {
+			 * 	file_data.rawtokens = file_json_['rawtokens'];
+			 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
+			 * 	//	file_json["rawtokens"], file_data);
+			 * }
+			 * 
+			 * if ('errors' in file_json) {
+			 * 	file_data.errors = file_json_['errors'];
+			 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
+			 * 	//	file_json["errors"]);
+			 * }
+			 */
 
 			let _data: Dict<SyntaxData> = {file_path: file_data};
 			Object.assign(data, _data);

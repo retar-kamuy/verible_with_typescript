@@ -1,10 +1,12 @@
 import fs from 'fs';
+import path from 'path';
 
 /**
  * ``fs`` wrapper.
  */
 export class FileIO {
-	/** Synchronous read file method
+	/**
+	 * Synchronous read file method
 	 *
 	 * @return file data of string.
 	 */
@@ -12,6 +14,44 @@ export class FileIO {
 		let data = fs.readFileSync(path, { encoding: 'utf8' });
 		//console.log(`data: ${data}`);
 		return data;
+	}
+
+	/**
+	 * Reference URL {@link https://qiita.com/shisama/items/affb219514eb1166198e}
+	 * @param dirpath 
+	 * @param callback 
+	 */
+	showFiles = (dirpath: string, callback: any): void => {
+		fs.readdir(dirpath, {withFileTypes: true}, (err, dirents) => {
+			if (err) {
+				console.error(err);
+				return;
+			}
+		
+			for (const dirent of dirents) {
+				const fp = path.join(dirpath, dirent.name);
+				if (dirent.isDirectory()) {
+					this.showFiles(fp, callback);
+				} else {
+					callback(fp);
+				}
+			}
+		});
+	}
+
+	showFileSync = (dirpath: string, callback: any): void => {
+		const filenames = fs.readdirSync(dirpath);
+		filenames.forEach((filename) => {
+			const fullPath = path.join(dirpath, filename);
+			const stats = fs.statSync(fullPath);
+			if (stats.isFile()) {
+				//console.log(fullPath);
+				callback(fullPath);
+			}
+			else if (stats.isDirectory()) {
+				this.showFileSync(fullPath, callback);
+			}
+		});
 	}
 }
 

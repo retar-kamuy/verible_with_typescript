@@ -10,11 +10,11 @@
 */
 export default class Dig {
 	private objs: any;
-	private max_count: number;
+	private max_count: number | undefined;
 
 	constructor(max_count?: number) {
 		this.objs = [];
-		max_count !== undefined ? this.max_count = max_count : this.max_count = -1;
+		this.max_count = max_count;
 	}
 
 	get_result(): any {
@@ -22,13 +22,15 @@ export default class Dig {
 	}
 
 	run(obj: any, target: string): any {
-		if(this.max_count == 0) {
+		if(this.max_count === 0) {
 			return;
 		}
 
 		if(Object.values(obj).indexOf(target) > -1) {
 			this.objs.push(obj);
-			this.max_count -= 1;
+			if (this.max_count !== undefined) {
+				this.max_count -= 1;
+			}
 		}
 		else {
 			Object.values(obj).reduce((acc: any, val: any) => {
