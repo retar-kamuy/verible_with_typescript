@@ -1,4 +1,4 @@
-import { Node, SyntaxData, BranchNode, VeribleVerilogSyntax } from './verible_verilog_syntax';
+import { SyntaxData, VeribleVerilogSyntax } from './verible_verilog_syntax';
 
 interface ModuleInfo {
 	header_text: string;
@@ -58,29 +58,15 @@ function process_file_data(path: string, data: SyntaxData): void {
 }
 
 function main(): void {
-	let parser_path = '\.\\verible-verilog-syntax.exe';
+	let parser_path = ['\.\.\\verible', 'win64', 'verible-verilog-syntax.exe'];
 	let files = ['\.\\APB_SPI_Top.v'];
 
-	let parser = new VeribleVerilogSyntax(parser_path);
+	let parser = new VeribleVerilogSyntax(parser_path.join('\\'));
 	let data = parser.parse_files(files);
 
 	for (const [file_path, file_json] of Object.entries(data)) {
 		process_file_data(file_path, file_json);
 	}
-	//console.log(data);
-	//console.log(data.source_code);
-	//console.log(module[0]);
-	//const header = module[0].find(['kModuleHeader']);
-	//console.log(header.children);
-	//const name = header.children[0].find(['SymbolIdentifier', 'EscapedIdentifier']);
-	//console.log(name);
-	//print_entry('name:       ', [name.text]);
-	//console.log(name.text);
-
-	//const port = branch_node.iter_find_all(header, ['kPortDeclaration', 'kPort']);
-	//console.log(port);
-	//const port_id = branch_node.find_all(port, ['SymbolIdentifier', 'EscapedIdentifier']);
-	//console.log(port_id);
 };
 
 main();
