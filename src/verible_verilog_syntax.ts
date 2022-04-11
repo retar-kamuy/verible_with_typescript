@@ -16,6 +16,8 @@ export interface SyntaxData {
 	//errors: Error[];
 }
 
+let _parentSyntaxData: SyntaxData | undefined;
+
 /**
  * Base VeribleVerilogSyntax syntax tree node.
  *
@@ -32,14 +34,15 @@ export class Node {
 	/**
 	 * Parent SyntaxData.
 	 */
-	syntax_data(): any {
-		console.log('syntax_data');
-		console.log(this.parent);
-		if(this.parent !== undefined) {
-			return this.parent.syntax_data() !== undefined
-			? this.parent
+	syntax_data(): SyntaxData | undefined {
+		//if(this.parent !== undefined) {
+			//return this.parent.syntax_data() !== undefined
+			//? this.parent
+			//: undefined;
+			return _parentSyntaxData !== undefined
+			? _parentSyntaxData
 			: undefined;
-		}
+		//}
 	}
 
 	/**
@@ -63,6 +66,11 @@ export class Node {
 		const start = this.start();
 		const end = this.end();
 		const sd = this.syntax_data();
+		//console.log(`start: ${start}, end: ${end}`);
+		//console.log(sd);
+		if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
+			return sd.source_code.slice(start, end);
+		}
 		return '';
 	}
 }
@@ -90,6 +98,10 @@ export class BranchNode extends Node {
 	    //return first_token.start if first_token else None
 	//}
 
+	as_list(v: string[] | string) {
+		return Array.isArray(v) ? v: [v];
+	}
+
 	/**
 	 * Iterate all nodes matching specified filter.
 	 *
@@ -103,9 +115,9 @@ export class BranchNode extends Node {
 	 *
 	 * @return Nodes matching specified filter.
 	 */
-	iter_find_all(filter_: {[key: string]: string[]}, max_count?: number): BranchNode[] {
+	iter_find_all(filter_: {[key: string]: string[]} | {[key: string]: string}, max_count?: number): BranchNode[] {
 		const dig = new Dig(max_count);
-		for (const target of filter_.tag) {
+		for (const target of this.as_list(filter_.tag)) {
 			dig.run(this.children, target);
 		}
 		return dig.get_result();
@@ -123,7 +135,7 @@ export class BranchNode extends Node {
 	 *
 	 * @return First Node matching filter.
 	 */
-	find(filter_: {[key: string]: string[]}): BranchNode {
+	find(filter_: {[key: string]: string[]} | {[key: string]: string}): BranchNode {
 		const nodes = this.iter_find_all(filter_, 1);
 		return nodes[0];
 	}
@@ -150,15 +162,18 @@ export class BranchNode extends Node {
  * Syntax tree root node.
  */
 class RootNode extends BranchNode {
-	private _syntax_data: SyntaxData | undefined;
+	//private _syntax_data: SyntaxData | undefined;
 
 	constructor(tag: string, syntax_data?: SyntaxData, children?: Node[]) {
 		super(tag, undefined, children);
-		this._syntax_data = syntax_data;
+		//this._syntax_data = syntax_data;
+		_parentSyntaxData = syntax_data;
+		console.log(_parentSyntaxData);
 	}
 
 	syntax_data(): SyntaxData | undefined {
-		return this._syntax_data;
+		//return this._syntax_data;
+		return _parentSyntaxData;
 	}
 }
 

@@ -42,12 +42,17 @@ function print_entry(key: string, values: string[]): void {
 function process_file_data(path: string, data: SyntaxData): void {
 	if (data.tree !== undefined) {
 		console.log(data.tree);
-		for (const module of data.tree.iter_find_all({'tag': ['kModuleDeclaration']})) {
-			const header = module.find({'tag': ['kModuleHeader']});
-			console.log('kModuleHeader');
+		for (const module of data.tree.iter_find_all({'tag': 'kModuleDeclaration'})) {
+			const header = module.find({'tag': 'kModuleHeader'});
 			console.log(header);
-			console.log(header.constructor.name);
 			const name = header.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
+			console.log(name);
+			console.log(name.text());
+
+			for (const port of header.iter_find_all({'tag': ['kPortDeclaration', 'kPort']})) {
+				const port_id = port.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
+				console.log(port_id.text());
+			}
 		}
 	}
 }
