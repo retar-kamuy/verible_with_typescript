@@ -1,3 +1,34 @@
+/**
+ * Copyright 2022 Takumi Hoshi.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/**
+ * Print module name, ports, parameters and imports.
+ *
+ * Usage: print_modules.py PATH_TO_VERIBLE_VERILOG_SYNTAX \\
+ *						 VERILOG_FILE [VERILOG_FILE [...]]
+ * This example shows how to use ``verible-verilog-syntax --export_json ...``
+ * output to extract information about module declarations found in System Verilog
+ * source files. Extracted information:
+ *
+ * * module name
+ * * module port names
+ * * module parameter names
+ * * module imports
+ * * module header code
+ */
+
 import { SyntaxData, VeribleVerilogSyntax } from './verible_verilog_syntax';
 
 interface ModuleInfo {
@@ -39,6 +70,23 @@ function print_entry(key: string, values: string[]): void {
 	console.info(`${_ESC_COLOR('yellow', '//')}${key}${value_part}`);
 };
 
+ /**
+ * Print information about modules found in SystemVerilog file.
+ *
+ * This function uses verible_verilog_syntax.Node methods to find module
+ * declarations and specific tokens containing following information:
+ *
+ * * module name
+ * * module port names
+ * * module parameter names
+ * * module imports
+ * * module header code
+ *
+ * Args:
+ *   path: Path to source file (used only for informational purposes)
+ *   data: Parsing results returned by one of VeribleVerilogSyntax' parse_*
+ *         methods.
+ */
 function process_file_data(path: string, data: SyntaxData): void {
 	const modules_info: ModuleInfo[] = [];
 
