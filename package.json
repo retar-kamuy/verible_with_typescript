@@ -1,5 +1,5 @@
 {
-  "name": "verible_verilog_syntax",
+  "name": "verible_with_typescript",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -20,10 +20,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hoshi-takumi/verible_verilog_syntax.git"
+    "url": "git+https://github.com/retar-kamuy/verible_with_typescript.git"
   },
   "bugs": {
-    "url": "https://github.com/hoshi-takumi/verible_verilog_syntax/issues"
+    "url": "https://github.com/retar-kamuy/verible_with_typescript/issues"
   },
-  "homepage": "https://github.com/hoshi-takumi/verible_verilog_syntax#readme"
+  "homepage": "https://github.com/retar-kamuy/verible_with_typescript#readme"
 }
