@@ -1,5 +1,4 @@
 
-import console from 'console';
 import { FileIO } from './file_io';
 import { SubProcess } from './sub_process';
 import Dig from './dig';
@@ -307,7 +306,7 @@ export class VeribleVerilogSyntax {
 		}
 
 		const subprocess = new SubProcess();
-		const proc = subprocess.run([this.executable, ...args, ...paths]);
+		const proc = subprocess.runSync([this.executable, ...args, ...paths]);
 
 		const json_data: SyntaxData = JSON.parse(proc.stdout);
 		let data: Dict<SyntaxData> = {};
@@ -318,8 +317,7 @@ export class VeribleVerilogSyntax {
 
 			if (file_path === '-') {
 				file_data = {source_code: input_};
-			}
-			else {
+			} else {
 				const f = new FileIO();
 				file_data = {source_code: f.readFileSync(file_path)};
 			}
