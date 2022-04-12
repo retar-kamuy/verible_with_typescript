@@ -12,7 +12,7 @@ export class FileIO {
 	 */
 	readFileSync(path: string): string {
 		let data = fs.readFileSync(path, { encoding: 'utf8' });
-		//console.log(`data: ${data}`);
+		//console.debug(`data: ${data}`);
 		return data;
 	}
 
@@ -45,7 +45,7 @@ export class FileIO {
 			const fullPath = path.join(dirpath, filename);
 			const stats = fs.statSync(fullPath);
 			if (stats.isFile()) {
-				//console.log(fullPath);
+				//console.debug(fullPath);
 				callback(fullPath);
 			}
 			else if (stats.isDirectory()) {
@@ -68,6 +68,6 @@ export class JsonIO {
 	writeFileSync(file: fs.PathOrFileDescriptor, value: any, replacer?: (number | string)[] | null, space?: string | number): void {
 		const json_data = JSON.stringify(value, replacer, space);
 		fs.writeFileSync(file, json_data);
-		console.log('Write JSON file.');
+		console.info('Write JSON file.');
 	};
 }

@@ -27,7 +27,7 @@ export class Node {
 	public parent: Node | undefined;
 
 	constructor(parent?: Node) {
-		parent !== undefined ? this.parent = parent : this.parent = undefined;
+		this.parent = parent !== undefined ? parent : undefined;
 	}
 
 	/**
@@ -65,8 +65,8 @@ export class Node {
 		const start = this.start();
 		const end = this.end();
 		const sd = this.syntax_data();
-		//console.log(`start: ${start}, end: ${end}`);
-		//console.log(sd);
+		//console.debug(`start: ${start}, end: ${end}`);
+		//console.debug(sd);
 		if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
 			return sd.source_code.slice(start, end);
 		}
@@ -88,7 +88,7 @@ export class BranchNode extends Node {
 	constructor(tag: string, parent?: Node, children?: Node[]) {
 		super(parent);
 		this.tag = tag;
-		children !== undefined ? this.children = children : this.children = [];
+		this.children = children !== undefined ? children : [];
 	}
 
 	//start(): number {
@@ -167,7 +167,7 @@ class RootNode extends BranchNode {
 		super(tag, undefined, children);
 		//this._syntax_data = syntax_data;
 		_parentSyntaxData = syntax_data;
-		console.log(_parentSyntaxData);
+		//console.debug(_parentSyntaxData);
 	}
 
 	syntax_data(): SyntaxData | undefined {
@@ -251,14 +251,14 @@ export class VeribleVerilogSyntax {
 			return new RootNode(tag, data, []);
 		}
 
-		//console.log(tree);
+		//console.debug(tree);
 		for (const child of tree.children) {
 			!((skip_null && child === null) || child === undefined)
 			? children.push(this.transform(child, skip_null))
 			: children.push(new LeafNode());
 		}
 
-		//console.log(tree);
+		//console.debug(tree);
 		return new RootNode(tag, data, children);
 	}
 
@@ -312,7 +312,7 @@ export class VeribleVerilogSyntax {
 		let data: Dict<SyntaxData> = {};
 
 		for (const [file_path, file_json] of Object.entries(json_data)) {
-			//console.log(`{${file_path}, ${file_json}}`);
+			//console.debug(`{${file_path}, ${file_json}}`);
 			let file_data: SyntaxData;
 
 			if (file_path === '-') {
@@ -348,7 +348,8 @@ export class VeribleVerilogSyntax {
 			 * }
 			 */
 
-			let _data: Dict<SyntaxData> = {file_path: file_data};
+			const _data: Dict<SyntaxData> = {};
+			_data[file_path] = file_data;
 			Object.assign(data, _data);
 		}
 		return data;
