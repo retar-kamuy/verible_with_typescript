@@ -1,3 +1,19 @@
+/**
+ * Copyright 2022 Takumi Hoshi.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+/** Wrapper for ``verible-verilog-syntax --export_json */
 
 import { FileIO } from './file_io';
 import { SubProcess } from './sub_process';
@@ -30,9 +46,7 @@ export class Node {
 		this.parent = parent !== undefined ? parent : undefined;
 	}
 
-	/**
-	 * Parent SyntaxData.
-	 */
+	/**  Parent SyntaxData. */
 	syntax_data(): SyntaxData | undefined {
 		//if(this.parent !== undefined) {
 			//return this.parent.syntax_data() !== undefined
@@ -44,23 +58,17 @@ export class Node {
 		//}
 	}
 
-	/**
-	 * Byte offset of node's first character in source text.
-	 */
+	/** Byte offset of node's first character in source text. */
 	 start(): number | undefined {
 		return undefined;
 	}
 
-	/**
-	 * Byte offset of a character just past the node in source text.
-	 */
+	/** Byte offset of a character just past the node in source text. */
 	end(): number | undefined {
 		return undefined;
 	}
 
-	/**
-	 * Source code fragment spanning all tokens in a node.
-	 */
+	/**  Source code fragment spanning all tokens in a node. */
 	text(): string {
 		const start = this.start();
 		const end = this.end();
@@ -157,9 +165,7 @@ export class BranchNode extends Node {
 	}
 }
 
-/**
- * Syntax tree root node.
- */
+/**  Syntax tree root node. */
 class RootNode extends BranchNode {
 	//private _syntax_data: SyntaxData | undefined;
 
@@ -182,16 +188,12 @@ class RootNode extends BranchNode {
  * This specific class is used for null nodes.
  */
 class LeafNode extends Node {
-	/**
-	 * Byte offset of token's first character in source text.
-	 */
+	/**  Byte offset of token's first character in source text. */
 	start(): number | undefined {
 		return undefined;
 	}
 
-	/**
-	 * Byte offset of a character just past the token in source text.
-	 */
+	/** Byte offset of a character just past the token in source text. */
 	end(): number | undefined {
 		return undefined;
 	}
@@ -282,9 +284,7 @@ export class VeribleVerilogSyntax {
 		return new TokenNode(tag, start, end)
 	}
 
-	/**
-	 * Common implementation of parse_* methods
-	 */
+	/**  Common implementation of parse_* methods */
 	_parse(paths: string[], options?: Dict<any>, input_?: string): Dict<SyntaxData> {
 		const _options = {
 			gen_tree: true,
