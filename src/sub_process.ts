@@ -21,7 +21,7 @@ export class SubProcess {
 				console.error(`stderr: ${stderr}`);
 				throw err;
 			} else {
-				//console.debug(`stdout: ${stdout}`);
+				//console.info(`stdout: ${stdout}`);
 			}
 		});
 	}
@@ -32,7 +32,7 @@ export class SubProcess {
 	 */
 	runSync = (args: string[]): {stdout: string} => {
 		const stdout = child_process.execSync(args.join(' '));
-		//console.debug(`stdout: ${stdout.toString()}`);
+		//console.info(`stdout: ${stdout.toString()}`);
 		return {stdout: stdout.toString()};
 	}
 
@@ -47,7 +47,7 @@ export class SubProcess {
 			const spawn = child_process.spawn(cmd, options);
 
 			spawn.stdout.on('data', (chunk) => {
-				//console.debug(`stdout: ${chunk.toString()}`);
+				//console.info(`stdout: ${chunk.toString()}`);
 			});
 
 			spawn.stderr.on(`data`, (chunk) => {
@@ -55,8 +55,7 @@ export class SubProcess {
 			});
 
 			spawn.on('close', (code) => {
-				//console.debug(`close: ${code}`);
-
+				//console.info(`close: ${code}`);
 				resolve(code);
 			});
 		});
@@ -81,5 +80,4 @@ export class SubProcess {
 		}
 		return without_space;
 	}
-
 }

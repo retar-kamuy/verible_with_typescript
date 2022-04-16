@@ -12,9 +12,12 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * This code is translated the JSON export sample in Python into TypeScript.
+ * the sample is created by the Verible Authors.
  */
-/** Wrapper for ``verible-verilog-syntax --export_json */
 
+/** Wrapper for ``verible-verilog-syntax --export_json */
 import { FileIO } from './file_io';
 import { SubProcess } from './sub_process';
 import Dig from './dig';
@@ -68,13 +71,13 @@ export class Node {
 		return undefined;
 	}
 
-	/**  Source code fragment spanning all tokens in a node. */
+	/** Source code fragment spanning all tokens in a node. */
 	text(): string {
 		const start = this.start();
 		const end = this.end();
 		const sd = this.syntax_data();
-		//console.debug(`start: ${start}, end: ${end}`);
-		//console.debug(sd);
+		//console.info(`start: ${start}, end: ${end}`);
+		//console.info(sd);
 		if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
 			return sd.source_code.slice(start, end);
 		}
@@ -173,7 +176,7 @@ class RootNode extends BranchNode {
 		super(tag, undefined, children);
 		//this._syntax_data = syntax_data;
 		_parentSyntaxData = syntax_data;
-		//console.debug(_parentSyntaxData);
+		//console.info(_parentSyntaxData);
 	}
 
 	syntax_data(): SyntaxData | undefined {
@@ -253,14 +256,14 @@ export class VeribleVerilogSyntax {
 			return new RootNode(tag, data, []);
 		}
 
-		//console.debug(tree);
+		//console.info(tree);
 		for (const child of tree.children) {
 			!((skip_null && child === null) || child === undefined)
 			? children.push(this.transform(child, skip_null))
 			: children.push(new LeafNode());
 		}
 
-		//console.debug(tree);
+		//console.info(tree);
 		return new RootNode(tag, data, children);
 	}
 
@@ -312,7 +315,7 @@ export class VeribleVerilogSyntax {
 		let data: Dict<SyntaxData> = {};
 
 		for (const [file_path, file_json] of Object.entries(json_data)) {
-			//console.debug(`{${file_path}, ${file_json}}`);
+			//console.info(`{${file_path}, ${file_json}}`);
 			let file_data: SyntaxData;
 
 			if (file_path === '-') {

@@ -12,7 +12,7 @@ export class FileIO {
 	 */
 	readFileSync(path: string): string {
 		let data = fs.readFileSync(path, { encoding: 'utf8' });
-		//console.debug(`data: ${data}`);
+		//console.info(`data: ${data}`);
 		return data;
 	}
 
@@ -45,7 +45,7 @@ export class FileIO {
 			const fullPath = path.join(dirpath, filename);
 			const stats = fs.statSync(fullPath);
 			if (stats.isFile()) {
-				//console.debug(fullPath);
+				//console.info(fullPath);
 				callback(fullPath);
 			}
 			else if (stats.isDirectory()) {

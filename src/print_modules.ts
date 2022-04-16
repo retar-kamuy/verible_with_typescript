@@ -12,7 +12,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * This code is translated the JSON export sample in Python into TypeScript.
+ * the sample is created by the Verible Authors.
  */
+
 /**
  * Print module name, ports, parameters and imports.
  *
@@ -28,7 +32,6 @@
  * * module imports
  * * module header code
  */
-
 import { SyntaxData, VeribleVerilogSyntax } from './verible_verilog_syntax';
 
 interface ModuleInfo {
@@ -87,11 +90,11 @@ function print_entry(key: string, values: string[]): void {
  *   data: Parsing results returned by one of VeribleVerilogSyntax' parse_*
  *         methods.
  */
-function process_file_data(path: string, data: SyntaxData): void {
+function process_file_data(file_path: string, data: SyntaxData): void {
 	const modules_info: ModuleInfo[] = [];
 
 	if (data.tree !== undefined) {
-		//console.debug(data.tree);
+		//console.info(data.tree);
 		for (const module of data.tree.iter_find_all({'tag': 'kModuleDeclaration'})) {
 			const module_info: ModuleInfo = {
 				header_text: '',
@@ -114,40 +117,40 @@ function process_file_data(path: string, data: SyntaxData): void {
 				continue;
 			}
 			module_info.name = name.text();
-			//console.debug(module_info.name);
+			//console.info(module_info.name);
 
 			// Get the list of ports
 			for (const port of header.iter_find_all({'tag': ['kPortDeclaration', 'kPort']})) {
 				const port_id = port.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
 				module_info.ports.push(port_id.text());
-				//console.debug(module_info.ports);
+				//console.info(module_info.ports);
 			}
 
 			// Get the list of parameters
-			for (const param of header.iter_find_all({"tag": ["kParamDeclaration"]})) {
-				const param_id = param.find({"tag": ["SymbolIdentifier", "EscapedIdentifier"]});
+			for (const param of header.iter_find_all({'tag': ['kParamDeclaration']})) {
+				const param_id = param.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
 				module_info.parameters.push(param_id.text());
-				//console.debug(module_info.parameters);
+				//console.info(module_info.parameters);
 			}
 
 			// Get the list of imports
-			for (const pkg of module.iter_find_all({"tag": ["kPackageImportItem"]})) {
+			for (const pkg of module.iter_find_all({'tag': ['kPackageImportItem']})) {
 				module_info.imports.push(pkg.text());
-				//console.debug(module_info.imports);
+				//console.info(module_info.imports);
 			}
 			modules_info.push(module_info);
 		}
 
 		// Print results
 		if (modules_info.length > 0) {
-			console.info(`\u001b[1;97;7m${path} \u001b[0m\n`);
+			console.info(`\u001b[1;97;7m${file_path} \u001b[0m\n`);
 		}
 
 		for (const module_info of modules_info) {
-			print_entry("name:       ", [module_info.name]);
-			print_entry("ports:      ", module_info.ports);
-			print_entry("parameters: ", module_info.parameters);
-			print_entry("imports:    ", module_info.imports);
+			print_entry('name:       ', [module_info.name]);
+			print_entry('ports:      ', module_info.ports);
+			print_entry('parameters: ', module_info.parameters);
+			print_entry('imports:    ', module_info.imports);
 		}
 	}
 }
