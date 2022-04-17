@@ -69,7 +69,7 @@ export class SubProcess {
 
 	_remove_spaces = (with_spaces: string[]): string[] => {
 		let without_space: string[] = [];
-		for (const v of with_spaces) {
+		with_spaces.forEach((v: string) => {
 			const p = v.indexOf(' ');
 			if(p > -1) {
 				without_space.push(v.slice(0, p));
@@ -77,7 +77,7 @@ export class SubProcess {
 			} else {
 				without_space.push(v);
 			}
-		}
+		});
 		return without_space;
 	}
 }

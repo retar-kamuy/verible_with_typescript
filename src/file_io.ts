@@ -41,7 +41,7 @@ export class FileIO {
 
 	showFileSync = (dirpath: string, callback: any): void => {
 		const filenames = fs.readdirSync(dirpath);
-		filenames.forEach((filename) => {
+		filenames.forEach((filename: string) => {
 			const fullPath = path.join(dirpath, filename);
 			const stats = fs.statSync(fullPath);
 			if (stats.isFile()) {

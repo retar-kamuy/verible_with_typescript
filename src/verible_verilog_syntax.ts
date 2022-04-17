@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This code is translated the JSON export sample in Python into TypeScript.
- * the sample is created by the Verible Authors.
- */
+ * This code is translated Verible's SystemVerilog Syntax tool in Python into TypeScript.
+ * the tool is obtained the Apache License, Version 2.0;
+ *
+ * Verible's repository at:
+ *     https://github.com/chipsalliance/verible
+*/
 
 /** Wrapper for ``verible-verilog-syntax --export_json */
 import { FileIO } from './file_io';
@@ -34,8 +37,6 @@ export interface SyntaxData {
 	//errors: Error[];
 }
 
-let _parentSyntaxData: SyntaxData | undefined;
-
 /**
  * Base VeribleVerilogSyntax syntax tree node.
  *
@@ -50,15 +51,11 @@ export class Node {
 	}
 
 	/**  Parent SyntaxData. */
-	syntax_data(): SyntaxData | undefined {
-		//if(this.parent !== undefined) {
-			//return this.parent.syntax_data() !== undefined
-			//? this.parent
-			//: undefined;
-			return _parentSyntaxData !== undefined
-			? _parentSyntaxData
-			: undefined;
-		//}
+	//syntax_data(): SyntaxData | undefined {
+	syntax_data(): string | undefined {
+		return undefined;
+	//	if(this.parent !== undefined)
+	//		return this.parent.syntax_data() !== undefined ? this.parent : undefined;
 	}
 
 	/** Byte offset of node's first character in source text. */
@@ -78,10 +75,15 @@ export class Node {
 		const sd = this.syntax_data();
 		//console.info(`start: ${start}, end: ${end}`);
 		//console.info(sd);
-		if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
-			return sd.source_code.slice(start, end);
+		//if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
+		//	//console.info(sd.source_code.slice(start, end));
+		//	return sd.source_code.slice(start, end);
+		//}
+		if ((start !== undefined) && (end !== undefined) && (sd !== undefined)) {
+			return sd;
+		} else {
+			return '';
 		}
-		return '';
 	}
 }
 
@@ -170,19 +172,17 @@ export class BranchNode extends Node {
 
 /**  Syntax tree root node. */
 class RootNode extends BranchNode {
-	//private _syntax_data: SyntaxData | undefined;
+	private _syntax_data: SyntaxData | undefined;
 
 	constructor(tag: string, syntax_data?: SyntaxData, children?: Node[]) {
 		super(tag, undefined, children);
-		//this._syntax_data = syntax_data;
-		_parentSyntaxData = syntax_data;
+		this._syntax_data = syntax_data;
 		//console.info(_parentSyntaxData);
 	}
 
-	syntax_data(): SyntaxData | undefined {
-		//return this._syntax_data;
-		return _parentSyntaxData;
-	}
+	//syntax_data(): SyntaxData | undefined {
+	//	return this._syntax_data;
+	//}
 }
 
 /**
@@ -214,12 +214,15 @@ class TokenNode extends LeafNode {
 	private tag: string;
 	private _start: number;
 	private _end: number;
+	private _text: string | undefined;
 
-	constructor(tag: string, _start: number, _end: number, parent?: Node) {
+	//constructor(tag: string, _start: number, _end: number, parent?: Node) {
+	constructor(tag: string, start: number, end: number, parent?: Node, text?: string) {
 		super(parent);
 		this.tag = tag;
-		this._start = _start;
-		this._end = _end;
+		this._start = start;
+		this._end = end;
+		this._text = text;
 	}
 
 	start(): number {
@@ -230,6 +233,9 @@ class TokenNode extends LeafNode {
 		return this._end;
 	}
 
+	syntax_data(): string {
+		return this._text !== undefined ? this._text : '';
+	}
 }
 
 /**
@@ -284,7 +290,8 @@ export class VeribleVerilogSyntax {
 		const tag = tree.tag;
 		const start = tree.start;
 		const end = tree.end;
-		return new TokenNode(tag, start, end)
+		const text = tree.text;
+		return new TokenNode(tag, start, end, undefined, text);
 	}
 
 	/**  Common implementation of parse_* methods */
@@ -310,6 +317,7 @@ export class VeribleVerilogSyntax {
 
 		const subprocess = new SubProcess();
 		const proc = subprocess.runSync([this.executable, ...args, ...paths]);
+		//console.info(proc.stdout);
 
 		const json_data: SyntaxData = JSON.parse(proc.stdout);
 		let data: Dict<SyntaxData> = {};

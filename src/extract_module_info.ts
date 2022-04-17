@@ -13,16 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * This code is translated the JSON export sample in Python into TypeScript.
- * the sample is created by the Verible Authors.
+ * This code is translated Verible's SystemVerilog Syntax tool in Python into TypeScript.
+ * the tool is obtained the Apache License, Version 2.0;
+ *
+ * Verible's repository at:
+ *     https://github.com/chipsalliance/verible
 */
 
+import path from 'path';
 import { SyntaxData, VeribleVerilogSyntax } from './verible_verilog_syntax';
-
-type InstanceInfo = {
-	name: string;
-	type: string;
-}
 
 interface ModuleInfo {
 	path: string;
@@ -30,7 +29,10 @@ interface ModuleInfo {
 	ports: string[];
 	parameters: string[];
 	imports: string[];
-	instances: InstanceInfo[];
+	instances: {
+		name: string[],
+		type: string[]
+	};
 };
 
 /**
@@ -46,20 +48,18 @@ interface ModuleInfo {
  * * module imports
  * * module instances names and types
  *
- * Args:
- *   path: Path to source file (used only for informational purposes)
- *   data: Parsing results returned by one of VeribleVerilogSyntax' parse_*
- *         methods.
+ * @param path Path to source file (used only for informational purposes)
+ * @param data Parsing results returned by one of VeribleVerilogSyntax' parse_* methods.
  */
-function process_file_data(file_path: string, data: SyntaxData): void {
+const process_file_data = (file_path: string, data: SyntaxData): ModuleInfo[] => {
 	const modules_info: ModuleInfo[] = [];
 
-	if (data === undefined) {
-		return;
-	}
-	if (data.tree == undefined) {
-		return;
-	}
+	if (data === undefined)
+		return modules_info;
+	if (data.tree == undefined)
+		return modules_info;
+
+	//console.info(data.tree);
 	for (const module of data.tree.iter_find_all({'tag': 'kModuleDeclaration'})) {
 		const module_info: ModuleInfo = {
 			path: '',
@@ -67,22 +67,21 @@ function process_file_data(file_path: string, data: SyntaxData): void {
 			ports: [],
 			parameters: [],
 			imports: [],
-			instances: []
+			instances: {name: [], type: []}
 		};
 
 		module_info.path = file_path;
 
 		// Find module header
 		const header = module.find({'tag': 'kModuleHeader'});
-		if (header === undefined) {
+		//console.info(header);
+		if (header === undefined)
 			continue;
-		}
 
 		// Find module name
 		const name = header.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
-		if (name === undefined) {
+		if (name === undefined)
 			continue;
-		}
 		module_info.name = name.text();
 
 		// Get the list of ports
@@ -103,41 +102,67 @@ function process_file_data(file_path: string, data: SyntaxData): void {
 		}
 
 		// Get the list of instances
-		const names: string[] = [];
+		module_info.instances = {name: [], type: []};
 		for (const inst of module.iter_find_all({'tag': ['kGateInstance']})) {
 			const inst_id = inst.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
-			names.push(inst_id.text());
+			if(inst_id === undefined)
+				continue;
+			module_info.instances.name.push(inst_id.text());
 		}
 		for (const type of module.iter_find_all({'tag': ['kInstantiationType']})) {
 			const type_id = type.find({'tag': ['SymbolIdentifier', 'EscapedIdentifier']});
-			module_info.instances.push({name: names[0], type: type_id.text()});
-			names.shift();
+			if(type_id === undefined)
+				continue;
+			module_info.instances.type.push(type_id.text());
 		}
 
 		modules_info.push(module_info);
 	}
 
-	modules_info.forEach((module_info: ModuleInfo) => {
-		console.info(module_info.path);
-		console.info(module_info.name);
-		console.info(module_info.ports);
-		console.info(module_info.parameters);
-		console.info(module_info.imports);
-		console.info(module_info.instances);
-	});
-	//console.log(modules_info);
+	//modules_info.forEach((module_info: ModuleInfo) => {
+	//	console.info(module_info.path);
+	//	console.info(module_info.name);
+	//	console.info(module_info.ports);
+	//	console.info(module_info.parameters);
+	//	console.info(module_info.imports);
+	//	console.info(module_info.instances.name);
+	//	console.info(module_info.instances.type);
+	//});
+	//console.info(modules_info);
+	return modules_info;
+}
+
+const top_module = (modules_info: ModuleInfo[]): string[] => {
+	return modules_info.reduce((top_module: string[], child: ModuleInfo) => {
+		const parents_module = modules_info.reduce((parents: string[], parent: ModuleInfo) => {
+			if ((child.name !== parent.name)) {
+				if (parent.instances.type.indexOf(child.name) > -1) {
+					parents.push(parent.name);
+				}
+			}
+			return parents;
+		}, []);
+
+		if (parents_module.length === 0) {
+			top_module.push(child.name);
+		}
+		return top_module;
+	}, []);
 }
 
 function main(): void {
-	let parser_path = ['\.\.\\verible', 'win64', 'verible-verilog-syntax.exe'];
-	let files = ['\.\\APB_SPI_Top.v'];
+	let parser_path = path.join('verible', 'win64', 'verible-verilog-syntax.exe');
+	let files = [path.join('dist', 'APB_SPI_Top.v'), path.join('dist', 'APB_SLAVE.v')];
 
-	let parser = new VeribleVerilogSyntax(parser_path.join('\\'));
+	let parser = new VeribleVerilogSyntax(parser_path);
 	let data = parser.parse_files(files);
 
+	let modules_info: ModuleInfo[] = [];
 	for (const [file_path, file_json] of Object.entries(data)) {
-		process_file_data(file_path, file_json);
+		modules_info = modules_info.concat(process_file_data(file_path, file_json));
 	}
+	const top_modules = top_module(modules_info);
+	console.info(top_modules);
 };
 
 main();
