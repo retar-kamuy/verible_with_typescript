@@ -52,10 +52,11 @@ export class Node {
 
 	/**  Parent SyntaxData. */
 	//syntax_data(): SyntaxData | undefined {
-	syntax_data(): string | undefined {
-		return undefined;
 	//	if(this.parent !== undefined)
 	//		return this.parent.syntax_data() !== undefined ? this.parent : undefined;
+	//}
+	syntax_data(): string | undefined {
+		return undefined;
 	}
 
 	/** Byte offset of node's first character in source text. */
@@ -73,17 +74,12 @@ export class Node {
 		const start = this.start();
 		const end = this.end();
 		const sd = this.syntax_data();
-		//console.info(`start: ${start}, end: ${end}`);
-		//console.info(sd);
-		//if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length) {
-		//	//console.info(sd.source_code.slice(start, end));
+		//if ((start !== undefined) && (end !== undefined) && sd && sd.source_code && end <= sd.source_code.length)
 		//	return sd.source_code.slice(start, end);
-		//}
-		if ((start !== undefined) && (end !== undefined) && (sd !== undefined)) {
+		if ((start !== undefined) && (end !== undefined) && (sd !== undefined))
 			return sd;
-		} else {
+		else
 			return '';
-		}
 	}
 }
 
@@ -177,7 +173,6 @@ class RootNode extends BranchNode {
 	constructor(tag: string, syntax_data?: SyntaxData, children?: Node[]) {
 		super(tag, undefined, children);
 		this._syntax_data = syntax_data;
-		//console.info(_parentSyntaxData);
 	}
 
 	//syntax_data(): SyntaxData | undefined {
@@ -258,25 +253,21 @@ export class VeribleVerilogSyntax {
 	_transform_tree(tree: any, data: SyntaxData, skip_null: boolean): RootNode {
 		const children = [];
 		const tag = tree.tag;
-		if (!('children' in tree)) {
+		if (!('children' in tree))
 			return new RootNode(tag, data, []);
-		}
 
-		//console.info(tree);
 		for (const child of tree.children) {
 			!((skip_null && child === null) || child === undefined)
 			? children.push(this.transform(child, skip_null))
 			: children.push(new LeafNode());
 		}
 
-		//console.info(tree);
 		return new RootNode(tag, data, children);
 	}
 
 	transform(tree: any, skip_null: boolean): any {
-		if (tree === undefined) {
+		if (tree === undefined)
 			return undefined;
-		}
 		if ('children' in tree) {
 			const children = [];
 			for (const child of tree.children) {
@@ -305,15 +296,12 @@ export class VeribleVerilogSyntax {
 		};
 
 		var args = ['-export_json'];
-		if (_options.gen_tree) {
+		if (_options.gen_tree)
 			args.push('-printtree');
-		}
-		if (_options.gen_tokens) {
+		if (_options.gen_tokens)
 			args.push('-printtokens');
-		}
-		if (_options.gen_rawtokens) {
+		if (_options.gen_rawtokens)
 			args.push('-printrawtokens');
-		}
 
 		const subprocess = new SubProcess();
 		const proc = subprocess.runSync([this.executable, ...args, ...paths]);
@@ -364,7 +352,6 @@ export class VeribleVerilogSyntax {
 			Object.assign(data, _data);
 		}
 		return data;
-		//return json_data;
 	}
 
 	/**
