@@ -120,7 +120,6 @@ function process_file_data(file_path: string, data: SyntaxData): void {
 		if (name === undefined)
 			continue;
 		module_info.name = name.text();
-		//console.info(module_info.name);
 
 		// Get the list of ports
 		for (const port of header.iter_find_all({'tag': ['kPortDeclaration', 'kPort']})) {

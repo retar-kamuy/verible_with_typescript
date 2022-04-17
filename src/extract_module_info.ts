@@ -118,17 +118,6 @@ const process_file_data = (file_path: string, data: SyntaxData): ModuleInfo[] =>
 
 		modules_info.push(module_info);
 	}
-
-	//modules_info.forEach((module_info: ModuleInfo) => {
-	//	console.info(module_info.path);
-	//	console.info(module_info.name);
-	//	console.info(module_info.ports);
-	//	console.info(module_info.parameters);
-	//	console.info(module_info.imports);
-	//	console.info(module_info.instances.name);
-	//	console.info(module_info.instances.type);
-	//});
-	//console.info(modules_info);
 	return modules_info;
 }
 
@@ -136,9 +125,8 @@ const top_module = (modules_info: ModuleInfo[]): string[] => {
 	return modules_info.reduce((top_module: string[], child: ModuleInfo) => {
 		const parents_module = modules_info.reduce((parents: string[], parent: ModuleInfo) => {
 			if ((child.name !== parent.name)) {
-				if (parent.instances.type.indexOf(child.name) > -1) {
+				if (parent.instances.type.indexOf(child.name) > -1)
 					parents.push(parent.name);
-				}
 			}
 			return parents;
 		}, []);
