@@ -220,16 +220,16 @@ class TokenNode extends LeafNode {
 		this._text = text;
 	}
 
+	syntax_data(): string {
+		return this._text !== undefined ? this._text : '';
+	}
+
 	start(): number {
 		return this._start;
 	}
 
 	end(): number {
 		return this._end;
-	}
-
-	syntax_data(): string {
-		return this._text !== undefined ? this._text : '';
 	}
 }
 
