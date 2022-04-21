@@ -23,6 +23,10 @@
 import path from 'path';
 import { SyntaxData, VeribleVerilogSyntax } from './verible_verilog_syntax';
 
+type Dict<T> = {
+	[key: string]: T
+}
+
 interface ModuleInfo {
 	path: string;
 	name: string;
@@ -51,15 +55,15 @@ interface ModuleInfo {
  * @param path Path to source file (used only for informational purposes)
  * @param data Parsing results returned by one of VeribleVerilogSyntax' parse_* methods.
  */
-const process_file_data = (file_path: string, data: SyntaxData): ModuleInfo[] => {
-	const modules_info: ModuleInfo[] = [];
+const process_file_data = (file_path: string, data: SyntaxData): Dict<ModuleInfo> => {
+	const modules_info: Dict<ModuleInfo> = {};
 
 	if (data === undefined)
-		return modules_info;
+		return {};
 	if (data.tree == undefined)
-		return modules_info;
+		return {};
 
-	//console.info(data.tree);
+	//console.log(data.tree);
 	for (const module of data.tree.iter_find_all({'tag': 'kModuleDeclaration'})) {
 		const module_info: ModuleInfo = {
 			path: '',
@@ -74,7 +78,7 @@ const process_file_data = (file_path: string, data: SyntaxData): ModuleInfo[] =>
 
 		// Find module header
 		const header = module.find({'tag': 'kModuleHeader'});
-		//console.info(header);
+		//console.log(header);
 		if (header === undefined)
 			continue;
 
@@ -116,41 +120,79 @@ const process_file_data = (file_path: string, data: SyntaxData): ModuleInfo[] =>
 			module_info.instances.type.push(type_id.text());
 		}
 
-		modules_info.push(module_info);
+		const _module_info: Dict<ModuleInfo> = {};
+		_module_info[module_info.name] = module_info;
+		Object.assign(modules_info, _module_info);
+		//modules_info.push(module_info);
 	}
 	return modules_info;
 }
 
-const top_module = (modules_info: ModuleInfo[]): string[] => {
-	return modules_info.reduce((top_module: string[], child: ModuleInfo) => {
-		const parents_module = modules_info.reduce((parents: string[], parent: ModuleInfo) => {
-			if ((child.name !== parent.name)) {
-				if (parent.instances.type.indexOf(child.name) > -1)
-					parents.push(parent.name);
-			}
-			return parents;
-		}, []);
+const top_module = (modules_info: Dict<ModuleInfo>): string[] => {
+	let _top_module: string[] = [];
 
-		if (parents_module.length === 0) {
-			top_module.push(child.name);
+	for (const [child_name, child_info] of Object.entries(modules_info)) {
+		let parents_name: string[] = [];
+
+		for (const [parent_name, parent_info] of Object.entries(modules_info)) {
+			if (child_name !== parent_name) {
+				if (parent_info.instances.type.indexOf(child_name) > -1) {
+					parents_name.push(parent_name);
+				}
+			}
 		}
-		return top_module;
-	}, []);
+
+		if (parents_name.length === 0) {
+			_top_module.push(child_name);
+		}
+	}
+	return _top_module;
+}
+
+const hierarchy = (modules_info: Dict<ModuleInfo>, top_modules: string[]): void => {
+	top_modules.forEach((top_module: string) => {
+		let children_module: string[] = [];
+		children_module.unshift(modules_info[top_module].name);
+		while (children_module.length !== 0) {
+			const module_info = modules_info[children_module[0]];
+			children_module.shift();
+			if (module_info === undefined) {
+				continue;
+			}
+
+			console.log(module_info);
+			if(module_info.instances !== undefined) {
+				children_module = module_info.instances.name.concat(children_module);
+			}
+		}
+	});
 }
 
 function main(): void {
-	let parser_path = path.join('verible', 'win64', 'verible-verilog-syntax.exe');
-	let files = [path.join('dist', 'APB_SPI_Top.v'), path.join('dist', 'APB_SLAVE.v')];
+	const my_args = process.argv.slice(2);
+	//let parser_path = path.join('verible', 'win64', 'verible-verilog-syntax.exe');
+	const parser_path = my_args[0];
+
+	//let files = [path.join('dist', 'APB_SPI_Top.v'), path.join('dist', 'APB_SLAVE.v')];
+	const files = my_args.slice(1);
 
 	let parser = new VeribleVerilogSyntax(parser_path);
 	let data = parser.parse_files(files);
 
-	let modules_info: ModuleInfo[] = [];
+	let modules_info: Dict<ModuleInfo> = {};
 	for (const [file_path, file_json] of Object.entries(data)) {
-		modules_info = modules_info.concat(process_file_data(file_path, file_json));
+		//modules_info = modules_info.concat(process_file_data(file_path, file_json));
+		Object.assign(modules_info, process_file_data(file_path, file_json));
 	}
 	const top_modules = top_module(modules_info);
-	console.info(top_modules);
+	console.log('/** Top Module List ******************************************');
+	console.log(top_modules);
+	console.log(' */\n');
+
+	console.log('/** Design Hierarchy *****************************************');
+	hierarchy(modules_info, top_modules);
+	console.log(' */\n');
 };
 
 main();
+//node dist\extract_module_info.js verible\win64\verible-verilog-syntax.exe dist\APB_SPI_Top.v dist\APB_SLAVE.v

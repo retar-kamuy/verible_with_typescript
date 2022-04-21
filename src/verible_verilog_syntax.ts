@@ -21,8 +21,8 @@
 */
 
 /** Wrapper for ``verible-verilog-syntax --export_json */
-import { FileIO } from './file_io';
-import { SubProcess } from './sub_process';
+import { readFileSync } from './fs';
+import { execSync } from './child_process';
 import Dig from './dig';
 
 type Dict<T> = {
@@ -303,22 +303,20 @@ export class VeribleVerilogSyntax {
 		if (_options.gen_rawtokens)
 			args.push('-printrawtokens');
 
-		const subprocess = new SubProcess();
-		const proc = subprocess.runSync([this.executable, ...args, ...paths]);
-		//console.info(proc.stdout);
+		const proc = execSync([this.executable, ...args, ...paths]);
+		//console.log(proc.stdout);
 
 		const json_data: SyntaxData = JSON.parse(proc.stdout);
 		let data: Dict<SyntaxData> = {};
 
 		for (const [file_path, file_json] of Object.entries(json_data)) {
-			//console.info(`{${file_path}, ${file_json}}`);
+			//console.log(`{${file_path}, ${file_json}}`);
 			let file_data: SyntaxData;
 
 			if (file_path === '-') {
 				file_data = {source_code: input_};
 			} else {
-				const f = new FileIO();
-				file_data = {source_code: f.readFileSync(file_path)};
+				file_data = {source_code: readFileSync(file_path)};
 			}
 
 			if ('tree' in file_json) {
