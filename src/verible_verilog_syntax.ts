@@ -21,8 +21,9 @@
 */
 
 /** Wrapper for ``verible-verilog-syntax --export_json */
-import { readFileSync } from './fs';
-import { execSync } from './child_process';
+
+import fs from 'fs';
+import * as child_process from 'child_process';
 import Dig from './dig';
 
 type Dict<T> = {
@@ -253,8 +254,9 @@ export class VeribleVerilogSyntax {
 	_transform_tree(tree: any, data: SyntaxData, skip_null: boolean): RootNode {
 		const children = [];
 		const tag = tree.tag;
-		if (!('children' in tree))
+		if (!('children' in tree)) {
 			return new RootNode(tag, data, []);
+		}
 
 		for (const child of tree.children) {
 			!((skip_null && child === null) || child === undefined)
@@ -266,8 +268,9 @@ export class VeribleVerilogSyntax {
 	}
 
 	transform(tree: any, skip_null: boolean): any {
-		if (tree === undefined)
+		if (tree === undefined) {
 			return undefined;
+		}
 		if ('children' in tree) {
 			const children = [];
 			for (const child of tree.children) {
@@ -296,59 +299,61 @@ export class VeribleVerilogSyntax {
 		};
 
 		var args = ['-export_json'];
-		if (_options.gen_tree)
+		if (_options.gen_tree) {
 			args.push('-printtree');
-		if (_options.gen_tokens)
-			args.push('-printtokens');
-		if (_options.gen_rawtokens)
-			args.push('-printrawtokens');
-
-		const proc = execSync([this.executable, ...args, ...paths]);
-		//console.log(proc.stdout);
-
-		const json_data: SyntaxData = JSON.parse(proc.stdout);
-		let data: Dict<SyntaxData> = {};
-
-		for (const [file_path, file_json] of Object.entries(json_data)) {
-			//console.log(`{${file_path}, ${file_json}}`);
-			let file_data: SyntaxData;
-
-			if (file_path === '-') {
-				file_data = {source_code: input_};
-			} else {
-				file_data = {source_code: readFileSync(file_path)};
-			}
-
-			if ('tree' in file_json) {
-				//file_data.tree = file_json_.tree;
-				file_data.tree = this._transform_tree(file_json.tree, file_data, _options.skip_null);
-			}
-
-			/**
-			 * TODO: Not implemented
-			 * if ('tokens' in file_json) {
-			 * 	file_data.tokens = file_json_['tokens'];
-			 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
-			 * 	//	file_json["tokens"], file_data);
-			 * }
-			 * 
-			 * if ('rawtokens' in file_json) {
-			 * 	file_data.rawtokens = file_json_['rawtokens'];
-			 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
-			 * 	//	file_json["rawtokens"], file_data);
-			 * }
-			 * 
-			 * if ('errors' in file_json) {
-			 * 	file_data.errors = file_json_['errors'];
-			 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
-			 * 	//	file_json["errors"]);
-			 * }
-			 */
-
-			const _data: Dict<SyntaxData> = {};
-			_data[file_path] = file_data;
-			Object.assign(data, _data);
 		}
+		if (_options.gen_tokens) {
+			args.push('-printtokens');
+		}
+		if (_options.gen_rawtokens) {
+			args.push('-printrawtokens');
+		}
+
+		let data: Dict<SyntaxData> = {};
+		paths.forEach((path: string) => {
+			const proc = child_process.execSync([this.executable, ...args, path].join(' '));
+
+			const json_data: SyntaxData = JSON.parse(proc.toString());
+
+			for (const [file_path, file_json] of Object.entries(json_data)) {
+				let file_data: SyntaxData;
+
+				if (file_path === '-') {
+					file_data = {source_code: input_};
+				} else {
+					file_data = { source_code: fs.readFileSync(path, { encoding: 'utf8' }) };
+				}
+
+				if ('tree' in file_json) {
+					file_data.tree = this._transform_tree(file_json.tree, file_data, _options.skip_null);
+				}
+
+				/**
+				 * TODO: Not implemented
+				 * if ('tokens' in file_json) {
+				 * 	file_data.tokens = file_json_['tokens'];
+				 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
+				 * 	//	file_json["tokens"], file_data);
+				 * }
+				 * 
+				 * if ('rawtokens' in file_json) {
+				 * 	file_data.rawtokens = file_json_['rawtokens'];
+				 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
+				 * 	//	file_json["rawtokens"], file_data);
+				 * }
+				 * 
+				 * if ('errors' in file_json) {
+				 * 	file_data.errors = file_json_['errors'];
+				 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
+				 * 	//	file_json["errors"]);
+				 * }
+				 */
+
+				const _data: Dict<SyntaxData> = {};
+				_data[file_path] = file_data;
+				Object.assign(data, _data);
+			}
+		});
 		return data;
 	}
 
