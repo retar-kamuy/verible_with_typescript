@@ -195,4 +195,4 @@ function main(): void {
 };
 
 main();
-//node dist\extract_module_info.js verible\win64\verible-verilog-syntax.exe dist\APB_SPI_Top.v dist\APB_SLAVE.v
+//node dist\analysis_module_info.js verible\win64\verible-verilog-syntax.exe dist\APB_SPI_Top.v dist\APB_SLAVE.v
