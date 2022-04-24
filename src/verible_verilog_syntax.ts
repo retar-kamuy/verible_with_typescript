@@ -19,16 +19,10 @@
  * Verible's repository at:
  *     https://github.com/chipsalliance/verible
 */
-
 /** Wrapper for ``verible-verilog-syntax --export_json */
-
 import fs from 'fs';
 import * as child_process from 'child_process';
-import Dig from './dig';
-
-type Dict<T> = {
-	[key: string]: T
-}
+import IndexOfNestedObject from './index_of_nested_object';
 
 export interface SyntaxData {
 	source_code?: string;
@@ -125,11 +119,11 @@ export class BranchNode extends Node {
 	 * @return Nodes matching specified filter.
 	 */
 	iter_find_all(filter_: {[key: string]: string[]} | {[key: string]: string}, max_count?: number): BranchNode[] {
-		const dig = new Dig(max_count);
+		const index_of = new IndexOfNestedObject(max_count);
 		for (const target of this.as_list(filter_.tag)) {
-			dig.run(this.children, target);
+			index_of.run(this.children, target);
 		}
-		return dig.get_result();
+		return index_of.get_result();
 	}
 
 	/**
@@ -234,6 +228,10 @@ class TokenNode extends LeafNode {
 	}
 }
 
+type Dict<T> = {
+	[key: string]: T
+}
+
 /**
  * ``verible-verilog-syntax`` wrapper.
  *
@@ -242,7 +240,7 @@ class TokenNode extends LeafNode {
  *
  */
 export class VeribleVerilogSyntax {
-	private executable = 'verible-verilog-syntax';
+	private executable;
 
 	/**
 	 * @param executable path to ``verible-verilog-syntax`` binary.
@@ -321,7 +319,7 @@ export class VeribleVerilogSyntax {
 				if (file_path === '-') {
 					file_data = {source_code: input_};
 				} else {
-					file_data = { source_code: fs.readFileSync(path, { encoding: 'utf8' }) };
+					file_data = { source_code: fs.readFileSync(path, {encoding: 'utf8'}) };
 				}
 
 				if ('tree' in file_json) {

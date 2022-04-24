@@ -8,7 +8,7 @@
  * Attributes:
  * @param objs (object[]): object matching specified target.
 */
-export default class Dig {
+export default class IndexOfNestedObject {
 	private objs: any;
 	private max_count: number | undefined;
 
@@ -22,21 +22,26 @@ export default class Dig {
 	}
 
 	run(obj: any, target: string): any {
-		if(this.max_count === 0)
+		if(this.max_count === 0) {
 			return;
+		}
 
 		if(Object.values(obj).indexOf(target) > -1) {
 			this.objs.push(obj);
-			if (this.max_count !== undefined)
-				this.max_count -= 1;
+			if (this.max_count !== undefined) {
+				this.max_count -= 1
+			}
 		}
 		else {
 			Object.values(obj).reduce((acc: any, val: any) => {
-				if (acc !== undefined)
+				if (acc !== undefined) {
 					return acc;
-				if (typeof val === 'object')
-					if(val !== null)
+				}
+				if (typeof val === 'object') {
+					if(val !== null) {
 						return this.run(val, target);
+					}
+				}
 			}, undefined);
 		}
 	}
