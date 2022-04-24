@@ -73,7 +73,10 @@ export class AnalysisModuleInfo {
 				ports: [],
 				parameters: [],
 				imports: [],
-				instances: {name: [], type: []}
+				instances: {
+					name: [],
+					type: []
+				}
 			};
 
 			module_info.path = file_path;
@@ -179,7 +182,6 @@ const setting_verible_path = (): string => {
 		? ['win64', 'verible-verilog-syntax.exe']
 		: ['CentOS-7.9.2009-Core-x86_64', 'verible-verilog-syntax'];
 
-	const is_linux = process.platform==='linux'
 	return path.join(...currentDir, ...osDir);
 }
 
