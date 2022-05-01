@@ -286,8 +286,27 @@ export class VeribleVerilogSyntax {
 		return new TokenNode(tag, start, end, undefined, text);
 	}
 
+	async _spawn(cmd: string, options: string[]): Promise<string> {
+		var proc = '';
+		return new Promise((resolve, reject) => {
+			const spawn = child_process.spawn(cmd, options);
+	
+			spawn.stdout.on('data', (chunk) => {
+				proc += chunk.toString();
+			});
+	
+			spawn.stderr.on(`data`, (chunk) => {
+				console.error(chunk.toString());
+			});
+	
+			spawn.on('close', () => {
+				resolve(proc);
+			});
+		});
+	}
+
 	/**  Common implementation of parse_* methods */
-	_parse(paths: string[], options?: Dict<any>, input_?: string): Dict<SyntaxData> {
+	async _parse(paths: string[], options?: Dict<any>, input_?: string): Promise<Dict<SyntaxData>> {
 		const _options = {
 			gen_tree: true,
 			skip_null: true,
@@ -307,51 +326,49 @@ export class VeribleVerilogSyntax {
 			args.push('-printrawtokens');
 		}
 
+		const proc = await this._spawn(this.executable, [...args, ...paths]);
+		
+		const json_data: SyntaxData = JSON.parse(proc);
 		let data: Dict<SyntaxData> = {};
-		paths.forEach((path: string) => {
-			const proc = child_process.execSync([this.executable, ...args, path].join(' '));
 
-			const json_data: SyntaxData = JSON.parse(proc.toString());
+		for (const [file_path, file_json] of Object.entries(json_data)) {
+			let file_data: SyntaxData;
 
-			for (const [file_path, file_json] of Object.entries(json_data)) {
-				let file_data: SyntaxData;
-
-				if (file_path === '-') {
-					file_data = {source_code: input_};
-				} else {
-					file_data = { source_code: fs.readFileSync(path, {encoding: 'utf8'}) };
-				}
-
-				if ('tree' in file_json) {
-					file_data.tree = this._transform_tree(file_json.tree, file_data, _options.skip_null);
-				}
-
-				/**
-				 * TODO: Not implemented
-				 * if ('tokens' in file_json) {
-				 * 	file_data.tokens = file_json_['tokens'];
-				 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
-				 * 	//	file_json["tokens"], file_data);
-				 * }
-				 * 
-				 * if ('rawtokens' in file_json) {
-				 * 	file_data.rawtokens = file_json_['rawtokens'];
-				 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
-				 * 	//	file_json["rawtokens"], file_data);
-				 * }
-				 * 
-				 * if ('errors' in file_json) {
-				 * 	file_data.errors = file_json_['errors'];
-				 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
-				 * 	//	file_json["errors"]);
-				 * }
-				 */
-
-				const _data: Dict<SyntaxData> = {};
-				_data[file_path] = file_data;
-				Object.assign(data, _data);
+			if (file_path === '-') {
+				file_data = {source_code: input_};
+			} else {
+			file_data = { source_code: fs.readFileSync(file_path, {encoding: 'utf8'}) };
 			}
-		});
+
+			if ('tree' in file_json) {
+				file_data.tree = this._transform_tree(file_json.tree, file_data, _options.skip_null);
+			}
+
+			/**
+			 * TODO: Not implemented
+			 * if ('tokens' in file_json) {
+			 * 	file_data.tokens = file_json_['tokens'];
+			 * 	//file_data.tokens = VeribleVerilogSyntax._transform_tokens(
+			 * 	//	file_json["tokens"], file_data);
+			 * }
+			 * 
+			 * if ('rawtokens' in file_json) {
+			 * 	file_data.rawtokens = file_json_['rawtokens'];
+			 * 	//file_data.rawtokens = VeribleVerilogSyntax._transform_tokens(
+			 * 	//	file_json["rawtokens"], file_data);
+			 * }
+			 * 
+			 * if ('errors' in file_json) {
+			 * 	file_data.errors = file_json_['errors'];
+			 * 	//file_data.errors = VeribleVerilogSyntax._transform_errors(
+			 * 	//	file_json["errors"]);
+			 * }
+			 */
+
+			const _data: Dict<SyntaxData> = {};
+			_data[file_path] = file_data;
+			Object.assign(data, _data);
+		}
 		return data;
 	}
 
@@ -367,7 +384,7 @@ export class VeribleVerilogSyntax {
 	 * By default only ``gen_tree`` is True.
 	 * @return A dict that maps file names to their parsing results in SyntaxData object.
 	 */
-	parse_files(paths: string[], options?: Dict<any>): Dict<SyntaxData> {
+	async parse_files(paths: string[], options?: Dict<any>): Promise<Dict<SyntaxData>> {
 		return this._parse(paths, options);
 	}
 
@@ -383,7 +400,7 @@ export class VeribleVerilogSyntax {
 	 * By default only ``gen_tree`` is True.
 	 * @return Parsing results in SyntaxData object.
 	 */
-	parse_file(path: string, options?: Dict<any>): Dict<SyntaxData> {
+	async parse_file(path: string, options?: Dict<any>): Promise<Dict<SyntaxData>> {
 		return this._parse([path], options);
 	}
 
@@ -399,7 +416,7 @@ export class VeribleVerilogSyntax {
 	 * By default only ``gen_tree`` is True.
 	 * @return Parsing results in SyntaxData object.
 	 */
-	parse_string(str: string, options?: Dict<any>): Dict<SyntaxData> {
+	async parse_string(str: string, options?: Dict<any>): Promise<Dict<SyntaxData>> {
 		return this._parse(['-'], options, str);
 	}
 }

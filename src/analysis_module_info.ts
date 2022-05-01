@@ -185,7 +185,7 @@ const setting_verible_path = (): string => {
 	return path.join(...currentDir, ...osDir);
 }
 
-function main(): void {
+async function main(): Promise<void> {
 	const argv = Argv;
 
 	console.log(argv);
@@ -197,7 +197,7 @@ function main(): void {
 	const files = my_args.slice(0);
 
 	const parser = new VeribleVerilogSyntax(parser_path);
-	const data = parser.parse_files(files);
+	const data = await parser.parse_files(files);
 
 	const analyzer = new AnalysisModuleInfo();
 	const modules_info: Dict<ModuleInfo> = {};
